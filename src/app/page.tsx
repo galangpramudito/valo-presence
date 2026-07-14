@@ -1,65 +1,75 @@
-import Image from "next/image";
+import Link from 'next/link';
+import Image from 'next/image';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { getSession } from '@/lib/session';
+import { AUTH_COOKIE_NAME } from '@/lib/constants';
 
-export default function Home() {
+export default async function Home() {
+  // Check if user is admin, redirect to admin panel
+  const cookieStore = await cookies();
+  const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+  const session = token ? await getSession(token) : null;
+
+  if (session?.role === 'admin') {
+    redirect('/admin');
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex-1 flex flex-col items-center justify-center px-4 relative min-h-[calc(100vh-4rem)] bg-white dark:bg-black transition-colors duration-300">
+
+      <div className="max-w-2xl mx-auto text-center relative z-10 animate-slide-up">
+        {/* Logo Switcher */}
+        <div className="inline-block mb-10 group">
+          <Image
+            src="/manganlogo_themelight.svg"
+            alt="MNG Group"
+            width={160}
+            height={160}
+            className="block dark:hidden transition-transform duration-500"
+            priority
+          />
+          <Image
+            src="/manganlogo.svg"
+            alt="MNG Group"
+            width={160}
+            height={160}
+            className="hidden dark:block transition-transform duration-500"
+            priority
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <h1 className="text-4xl sm:text-6xl font-[family-name:var(--font-montserrat)] font-black tracking-tighter text-black dark:text-white mb-6 uppercase">
+          Absensi Squad
+        </h1>
+
+        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg mx-auto">
+          Sistem manajemen kehadiran eksklusif untuk roster Valorant MNG Group. Verifikasi status operasional dan rekam bukti post-game secara profesional.
+        </p>
+
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            href="/absen"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-black text-white dark:bg-white dark:text-black hover:opacity-80 text-sm font-bold tracking-widest uppercase transition-all"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Mulai Absen
+          </Link>
+
+          <Link
+            href="/riwayat"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-transparent border border-black/20 dark:border-white/20 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 text-sm font-bold tracking-widest uppercase transition-all"
           >
-            Documentation
-          </a>
+            Lihat Riwayat
+          </Link>
         </div>
-      </main>
-    </div>
+      </div>
+
+      {/* Footer */}
+      <div className="absolute bottom-6 left-0 right-0 text-center">
+        <p className="text-[11px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-widest">
+          © 2026 MNG Group · Internal System
+        </p>
+      </div>
+    </main>
   );
 }
