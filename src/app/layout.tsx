@@ -23,9 +23,9 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "MNG Group · Internal System",
+  title: "MNG Group · Attendance System",
   description:
-    "Sistem absensi internal untuk squad Valorant MNG Group. Clean, monochrome, professional.",
+    "Attendance system for MNG Group.",
   keywords: ["valorant", "absensi", "mng group", "attendance"],
 };
 
@@ -43,7 +43,7 @@ export default async function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased font-[family-name:var(--font-inter)] selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {session && <Navbar nama={session.nama} role={session.role} />}
-          
+
           {session && <BroadcastBanner />}
 
           {children}
