@@ -144,7 +144,11 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
         setToast({ message: 'Izin terkirim! Redirecting...', type: 'success' });
         setTimeout(() => router.push('/riwayat'), 1500);
       } catch (error) {
-        setToast({ message: error instanceof Error ? error.message : 'Terjadi kesalahan', type: 'error' });
+        let errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
+        if (errorMessage.toLowerCase() === 'failed to fetch') {
+          errorMessage = 'Koneksi bermasalah. Pastikan internet stabil dan coba lagi.';
+        }
+        setToast({ message: errorMessage, type: 'error' });
       } finally {
         setIsSubmitting(false);
       }
@@ -170,7 +174,11 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
       setToast({ message: 'Upload complete! Redirecting...', type: 'success' });
       setTimeout(() => router.push('/riwayat'), 1500);
     } catch (error) {
-      setToast({ message: error instanceof Error ? error.message : 'Terjadi kesalahan', type: 'error' });
+      let errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
+      if (errorMessage.toLowerCase() === 'failed to fetch') {
+        errorMessage = 'Koneksi bermasalah. Pastikan internet stabil dan coba lagi.';
+      }
+      setToast({ message: errorMessage, type: 'error' });
     } finally {
       setIsSubmitting(false);
     }
