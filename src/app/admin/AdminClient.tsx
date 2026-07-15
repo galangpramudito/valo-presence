@@ -130,8 +130,8 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
       
       const rowNumber = index + 1;
       const nama = escapeCsv(r.nama);
-      const status = 'HADIR';
-      const proofUrl = escapeCsv(r.image_url);
+      const status = r.status === 'IZIN' ? 'IZIN' : (r.status === 'LATE' ? 'TELAT' : 'HADIR');
+      const proofUrl = r.status === 'IZIN' ? escapeCsv(`Alasan: ${r.alasan || '-'}`) : escapeCsv(r.image_url || '');
       
       csvRows.push(`${rowNumber},${nama},${dateStr},${dayName},${timeStr},${status},${proofUrl}`);
     });
@@ -455,7 +455,7 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
                   </div>
                 ) : (
                   filteredAbsensi.map((record) => (
-                    <div key={record.id} className="group flex items-center justify-between p-4 sm:p-5 border border-black/10 dark:border-white/10 bg-white dark:bg-black hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer" onClick={() => setLightbox(record.image_url)}>
+                    <div key={record.id} className="group flex items-center justify-between p-4 sm:p-5 border border-black/10 dark:border-white/10 bg-white dark:bg-black hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer" onClick={() => record.image_url ? setLightbox(record.image_url) : null}>
                       <div className="flex items-center gap-4 sm:gap-6">
                         <div className="hidden sm:flex w-12 h-12 border border-black/20 dark:border-white/20 items-center justify-center text-[16px] font-black text-black dark:text-white">
                           {getInitial(record.nama)}
@@ -469,6 +469,11 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
                             <span className="hidden sm:block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
                             <span className="text-black dark:text-white">{formatTime(record.created_at)} LOCAL</span>
                           </div>
+                          {record.status === 'IZIN' && record.alasan && (
+                            <div className="mt-2 text-[11px] font-bold text-blue-500 border-l-2 border-blue-500 pl-3">
+                              "{record.alasan}"
+                            </div>
+                          )}
                         </div>
                       </div>
                       
@@ -476,6 +481,10 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
                         {record.status === 'LATE' ? (
                           <div className="px-3 py-1 bg-red-500/10 border border-red-500/30 text-[10px] font-black text-red-500 tracking-widest uppercase">
                             Late / Telat
+                          </div>
+                        ) : record.status === 'IZIN' ? (
+                          <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 text-[10px] font-black text-blue-500 tracking-widest uppercase">
+                            Excused / Izin
                           </div>
                         ) : (
                           <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-black text-emerald-500 tracking-widest uppercase">

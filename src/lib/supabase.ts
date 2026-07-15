@@ -9,8 +9,9 @@ export type AbsensiRecord = {
   id: string;
   created_at: string;
   nama: string;
-  image_url: string;
+  image_url?: string;
   status?: string;
+  alasan?: string;
   schedule_id?: string;
   schedules?: Schedule; // joined data
 };

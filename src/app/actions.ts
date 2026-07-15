@@ -126,3 +126,66 @@ export async function uploadAbsensi(formData: FormData) {
     };
   }
 }
+
+export async function submitIzin(formData: FormData) {
+  try {
+    const identifier = await getRateLimitIdentifier();
+    const rateLimitResult = uploadRateLimiter.check(identifier);
+    if (!rateLimitResult.success) {
+      const waitMinutes = Math.ceil((rateLimitResult.resetTime - Date.now()) / 60000);
+      return { error: `Terlalu banyak request. Coba lagi dalam ${waitMinutes} menit.` };
+    }
+
+    const nama = formData.get('nama') as string;
+    const scheduleId = formData.get('schedule_id') as string;
+    const alasan = formData.get('alasan') as string;
+
+    if (!nama || !scheduleId || !alasan) {
+      return { error: 'Nama, jadwal, dan alasan diperlukan' };
+    }
+    
+    if (alasan.trim().length < 10) {
+      return { error: 'Alasan terlalu singkat. Jelaskan dengan detail!' };
+    }
+
+    // Validate schedule exists
+    const { data: schedule } = await supabase.from('schedules').select('id').eq('id', scheduleId).maybeSingle();
+    if (!schedule) {
+      return { error: 'Jadwal tidak valid atau tidak ditemukan' };
+    }
+
+    // Check for duplicate attendance
+    const { data: existingAbsensi } = await supabase
+      .from('absensi')
+      .select('id')
+      .eq('nama', nama)
+      .eq('schedule_id', scheduleId)
+      .maybeSingle();
+
+    if (existingAbsensi) {
+      return { error: 'Kamu sudah mengisi absensi/izin untuk jadwal ini!' };
+    }
+
+    const insertPayload = { 
+      nama, 
+      schedule_id: scheduleId, 
+      status: 'IZIN', 
+      alasan: alasan.trim(),
+      image_url: null 
+    };
+
+    const { error: insertError } = await supabase
+      .from('absensi')
+      .insert([insertPayload]);
+
+    if (insertError) {
+      console.error('Database error:', insertError);
+      return { error: `Gagal menyimpan data: ${insertError.message}` };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Submit Izin error:', error);
+    return { error: error instanceof Error ? error.message : 'Gagal submit izin' };
+  }
+}

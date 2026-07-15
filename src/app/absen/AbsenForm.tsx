@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Toast from '@/components/Toast';
-import { uploadAbsensi } from '../actions';
+import { uploadAbsensi, submitIzin } from '../actions';
 import type { Schedule } from '@/lib/supabase';
 
 export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 0 }: { nama: string; schedules?: Schedule[]; totalSchedulesToday?: number }) {
@@ -16,6 +16,10 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  
+  // Izin states
+  const [isIzinMode, setIsIzinMode] = useState(false);
+  const [alasan, setAlasan] = useState('');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -122,6 +126,31 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
       setToast({ message: 'Pilih jadwal yang sedang berlangsung', type: 'error' });
       return;
     }
+    if (isIzinMode) {
+      if (!alasan || alasan.trim().length < 10) {
+        setToast({ message: 'Alasan terlalu singkat. Jelaskan dengan detail!', type: 'error' });
+        return;
+      }
+      setIsSubmitting(true);
+      try {
+        const formData = new FormData();
+        formData.append('nama', nama);
+        formData.append('schedule_id', selectedScheduleId);
+        formData.append('alasan', alasan);
+
+        const result = await submitIzin(formData);
+        if (result.error) throw new Error(result.error);
+
+        setToast({ message: 'Izin terkirim! Redirecting...', type: 'success' });
+        setTimeout(() => router.push('/riwayat'), 1500);
+      } catch (error) {
+        setToast({ message: error instanceof Error ? error.message : 'Terjadi kesalahan', type: 'error' });
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     if (!file) { setToast({ message: 'Upload screenshot dulu', type: 'error' }); return; }
     setIsSubmitting(true);
     try {
@@ -209,8 +238,44 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
         {schedules.length > 0 && (
           <div className="border border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5 p-2 animate-fade-in">
             
-            {/* Upload Area */}
-            <div className="relative border border-black/10 dark:border-white/10 bg-white dark:bg-black overflow-hidden">
+            {/* Mode Toggle */}
+            <div className="flex mb-2">
+              <button
+                type="button"
+                onClick={() => setIsIzinMode(false)}
+                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase transition-all border-b-2 ${!isIzinMode ? 'border-emerald-500 text-emerald-500' : 'border-transparent text-gray-500 hover:text-black dark:hover:text-white'}`}
+              >
+                ABSEN HADIR
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsIzinMode(true)}
+                className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase transition-all border-b-2 ${isIzinMode ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500 hover:text-black dark:hover:text-white'}`}
+              >
+                AJUKAN IZIN
+              </button>
+            </div>
+
+            {isIzinMode ? (
+              <div className="p-4 sm:p-6 border border-blue-500/30 bg-white dark:bg-black">
+                <label className="block text-[11px] font-black text-blue-500 mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  Alasan Tidak Hadir
+                </label>
+                <textarea
+                  value={alasan}
+                  onChange={(e) => setAlasan(e.target.value)}
+                  placeholder="Ketik alasan kamu secara detail di sini..."
+                  className="w-full h-32 px-4 py-3 border border-black/20 dark:border-white/20 bg-transparent text-sm text-black dark:text-white focus:outline-none focus:border-blue-500 resize-none"
+                  required={isIzinMode}
+                />
+                <p className="mt-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                  Harus lebih dari 10 karakter. Jelaskan dengan detail.
+                </p>
+              </div>
+            ) : (
+              /* Upload Area */
+              <div className="relative border border-black/10 dark:border-white/10 bg-white dark:bg-black overflow-hidden">
               {isCameraOpen ? (
                 <div className="relative bg-black w-full min-h-[350px] flex flex-col items-center justify-center">
                   <video ref={videoRef} autoPlay playsInline className="w-full max-h-[400px] object-cover" />
@@ -325,17 +390,18 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
                 className="hidden" 
               />
             </div>
+            )}
 
             {/* Submit Action */}
             <div className="p-4 mt-2">
               <button
                 type="submit"
-                disabled={isSubmitting || !file}
+                disabled={isSubmitting || (!isIzinMode && !file) || (isIzinMode && alasan.length < 10)}
                 className={`
                   w-full py-4 text-[12px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-3
-                  ${isSubmitting || !file
+                  ${isSubmitting || (!isIzinMode && !file) || (isIzinMode && alasan.length < 10)
                     ? 'bg-transparent border-2 border-black/20 dark:border-white/20 text-gray-400 cursor-not-allowed'
-                    : 'bg-black text-white dark:bg-white dark:text-black active:scale-[0.98]'
+                    : isIzinMode ? 'bg-blue-500 text-white active:scale-[0.98] hover:bg-blue-600' : 'bg-black text-white dark:bg-white dark:text-black active:scale-[0.98]'
                   }
                 `}
               >

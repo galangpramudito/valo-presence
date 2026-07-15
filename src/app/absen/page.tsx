@@ -53,14 +53,13 @@ export default async function AbsenPage() {
           <div className="mt-8 p-4 sm:p-5 border border-blue-500/30 bg-blue-500/5 text-left max-w-sm mx-auto flex flex-col gap-3">
             <h3 className="font-black text-blue-500 uppercase tracking-widest text-[11px] flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              PROSEDUR ABSENSI
+              PROSEDUR ABSEN & IZIN
             </h3>
             <ol className="text-[11px] text-gray-600 dark:text-gray-400 font-medium leading-relaxed list-decimal list-inside space-y-2">
-              <li>Pilih <strong>Jadwal Aktif</strong> terlebih dahulu di bawah. (Jadwal otomatis disaring khusus untuk <strong>hari ini</strong>).</li>
-              <li>Klik Open WebCam atau Upload, lalu ambil foto <strong>layar/monitor</strong> kamu.</li>
-              <li>Pastikan foto menunjukkan <strong>Lobby In-Game Valorant</strong> dan status kamu sudah <strong>READY</strong>.</li>
-              <li>Klik <strong>TRANSMIT</strong> untuk mengirim absensi.</li>
-              <li>Jika sudah absen tapi nama tidak masuk di Riwayat, harap <strong>hubungi Admin</strong>.</li>
+              <li>Pilih <strong>Jadwal Aktif</strong> yang tersedia.</li>
+              <li>Untuk <strong>Hadir</strong>: Upload foto layar (Lobby In-Game + Status READY).</li>
+              <li>Untuk <strong>Izin</strong>: Klik tab "AJUKAN IZIN" dan ketik alasan yang jelas & detail (minimal 10 karakter).</li>
+              <li>Klik <strong>TRANSMIT</strong> untuk mengirim data.</li>
             </ol>
           </div>
         </div>
