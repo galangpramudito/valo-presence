@@ -107,7 +107,7 @@ export default function RiwayatView({ initialRecords, nama, leaderboard }: Riway
                 <div
                   key={record.id}
                   className="group flex items-center justify-between p-4 sm:p-5 border border-black/10 dark:border-white/10 bg-white dark:bg-black hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
-                  onClick={() => setLightbox(record.image_url)}
+                  onClick={() => record.image_url ? setLightbox(record.image_url) : null}
                 >
                   <div className="flex items-center gap-4 sm:gap-6">
                     <div className="hidden sm:flex w-12 h-12 border border-black/20 dark:border-white/20 items-center justify-center text-[16px] font-black text-black dark:text-white">
@@ -122,6 +122,11 @@ export default function RiwayatView({ initialRecords, nama, leaderboard }: Riway
                         <span className="hidden sm:block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
                         <span className="text-black dark:text-white">{formatTime(record.created_at)} LOCAL</span>
                       </div>
+                      {record.status === 'IZIN' && record.alasan && (
+                        <div className="mt-2 text-[11px] font-bold text-blue-500 border-l-2 border-blue-500 pl-3">
+                          "{record.alasan}"
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -129,6 +134,10 @@ export default function RiwayatView({ initialRecords, nama, leaderboard }: Riway
                     {record.status === 'LATE' ? (
                       <div className="px-3 py-1 bg-red-500/10 border border-red-500/30 text-[10px] font-black text-red-500 tracking-widest uppercase">
                         Late / Telat
+                      </div>
+                    ) : record.status === 'IZIN' ? (
+                      <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 text-[10px] font-black text-blue-500 tracking-widest uppercase">
+                        Excused / Izin
                       </div>
                     ) : (
                       <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-black text-emerald-500 tracking-widest uppercase hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity">
@@ -140,10 +149,12 @@ export default function RiwayatView({ initialRecords, nama, leaderboard }: Riway
                     )}
                   </div>
                   
-                  {/* Mobile View Proof Icon (Only show if not late or just always show icon) */}
-                  <div className="sm:hidden w-10 h-10 border border-black/10 dark:border-white/10 flex items-center justify-center text-black dark:text-white flex-shrink-0">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </div>
+                  {/* Mobile View Proof Icon (Only show if not IZIN) */}
+                  {record.status !== 'IZIN' && (
+                    <div className="sm:hidden w-10 h-10 border border-black/10 dark:border-white/10 flex items-center justify-center text-black dark:text-white flex-shrink-0">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
