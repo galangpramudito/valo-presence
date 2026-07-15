@@ -23,12 +23,14 @@ export default async function AbsenPage() {
     .gte('end_time', today.toISOString())
     .order('start_time', { ascending: true });
     
-  // Fetch user's attendance today to filter out already attended schedules
+  // Fetch user's attendance for these active schedules
+  const activeScheduleIds = allSchedules?.map(s => s.id) || [];
+  
   const { data: userAttendances } = await supabase
     .from('absensi')
     .select('schedule_id')
     .eq('nama', session.nama)
-    .gte('created_at', today.toISOString());
+    .in('schedule_id', activeScheduleIds.length > 0 ? activeScheduleIds : ['']);
     
   const attendedScheduleIds = userAttendances?.map(a => a.schedule_id).filter(Boolean) || [];
   const schedules = allSchedules?.filter(s => !attendedScheduleIds.includes(s.id)) || [];
