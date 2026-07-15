@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import { cookies } from "next/headers";
@@ -22,10 +22,27 @@ const montserrat = Montserrat({
   weight: ["800", "900"],
 });
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
-  title: "MNG Group · Attendance System",
+  metadataBase: new URL("https://mngesports.my.id"),
+  title: {
+    default: "MNG Group · Attendance System",
+    template: "%s | MNG Group",
+  },
   description:
-    "Attendance system for MNG Group.",
+    "Official Attendance & Management System for MNG Group Esports. Securely record and track member schedules, absences, and real-time statuses.",
+  applicationName: "MNG Attendance",
+  authors: [{ name: "MNG Esports", url: "https://mngesports.my.id" }],
+  generator: "Next.js",
   keywords: [
     "valorant",
     "absensi",
@@ -36,7 +53,52 @@ export const metadata: Metadata = {
     "mangan valorant",
     "mangan esports",
     "absensi mangan",
+    "esports management",
   ],
+  creator: "MNG Group",
+  publisher: "MNG Group",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: "MNG Group · Attendance System",
+    description: "Official Attendance System for MNG Group Esports.",
+    url: "https://mngesports.my.id",
+    siteName: "MNG Group",
+    images: [
+      {
+        url: "/manganlogo.svg",
+        width: 800,
+        height: 600,
+        alt: "MNG Group Logo",
+      },
+    ],
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MNG Group · Attendance System",
+    description: "Official Attendance System for MNG Group Esports.",
+    images: ["/manganlogo.svg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+  },
 };
 
 export default async function RootLayout({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { AbsensiRecord } from '@/lib/supabase';
@@ -11,17 +11,21 @@ interface RiwayatViewProps {
   leaderboard?: any[];
 }
 
-export default function RiwayatView({ initialRecords, nama, leaderboard }: RiwayatViewProps) {
-  const [records] = useState<AbsensiRecord[]>(initialRecords);
+const formatDate = (d: string) =>
+  new Date(d).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+
+const formatTime = (d: string) =>
+  new Date(d).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+
+const getInitial = (name: string) => name.charAt(0).toUpperCase();
+
+export default function RiwayatView({ initialRecords: records, nama, leaderboard }: RiwayatViewProps) {
   const [lightbox, setLightbox] = useState<string | null>(null);
 
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
-
-  const formatTime = (d: string) =>
-    new Date(d).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
-
-  const getInitial = (name: string) => name.charAt(0).toUpperCase();
+  const sortedLeaderboard = useMemo(() => {
+    if (!leaderboard) return [];
+    return [...leaderboard].filter(u => u.nama).sort((a, b) => a.rank - b.rank);
+  }, [leaderboard]);
 
   return (
     <>
@@ -77,7 +81,7 @@ export default function RiwayatView({ initialRecords, nama, leaderboard }: Riway
                 <h2 className="text-sm font-black tracking-widest text-black dark:text-white uppercase">MVP of the Month</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {leaderboard.filter(u => u.nama).sort((a,b) => a.rank - b.rank).map((user) => (
+                {sortedLeaderboard.map((user) => (
                   <div key={user.rank} className="flex items-center justify-between p-3 border border-black/10 dark:border-white/10 bg-white dark:bg-black">
                     <div className="flex items-center gap-3">
                       <span className={`text-[12px] font-black ${user.rank === 1 ? 'text-yellow-500' : user.rank === 2 ? 'text-gray-400' : 'text-amber-700'}`}>#{user.rank}</span>

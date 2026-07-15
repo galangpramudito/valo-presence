@@ -79,37 +79,46 @@ export default function LoginPage() {
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <div className="w-full max-w-sm relative z-10 animate-slide-up">
+      <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
           <div className="inline-block mb-6 w-[180px] h-[180px]">
-            {mounted && (
-              <Image
-                src={theme === 'dark' || (theme === 'system' && systemTheme === 'dark') ? logoDark : logoLight}
-                alt="MNG Group"
-                width={180}
-                height={180}
-                className="w-full h-full object-contain mx-auto animate-fade-in"
-                priority
-              />
-            )}
+            <Image
+              src={logoLight}
+              alt="MNG Group"
+              width={180}
+              height={180}
+              className="w-full h-full object-contain mx-auto block dark:hidden"
+              priority
+              fetchPriority="high"
+            />
+            <Image
+              src={logoDark}
+              alt="MNG Group"
+              width={180}
+              height={180}
+              className="w-full h-full object-contain mx-auto hidden dark:block"
+              priority
+              fetchPriority="high"
+            />
           </div>
-          <h1 className="text-2xl font-[family-name:var(--font-montserrat)] font-black tracking-widest text-black dark:text-white uppercase">
+          <h1 className="text-2xl font-[family-name:var(--font-montserrat)] font-black tracking-widest text-black dark:text-white uppercase animate-slide-up">
             System Login
           </h1>
-          <p className="mt-2 text-[12px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+          <p className="mt-2 text-[12px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest animate-slide-up delay-100">
             MNG Squad Identity Required
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="border border-black/10 dark:border-white/10 p-8 bg-black/5 dark:bg-white/5 backdrop-blur-md">
+        <div className="border border-black/10 dark:border-white/10 p-8 bg-black/5 dark:bg-white/5 backdrop-blur-md animate-slide-up delay-200">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-[10px] font-black text-black dark:text-white mb-2 uppercase tracking-[0.2em]">
+              <label htmlFor="identity" className="block text-[10px] font-black text-black dark:text-white mb-2 uppercase tracking-[0.2em]">
                 Identity
               </label>
               <div className="relative">
                 <select
+                  id="identity"
                   value={nama}
                   onChange={(e) => setNama(e.target.value)}
                   className="w-full px-4 py-3 border-b-2 border-black/20 dark:border-white/20 bg-transparent text-sm text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white appearance-none cursor-pointer rounded-none transition-colors"
@@ -127,10 +136,11 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-black dark:text-white mb-2 uppercase tracking-[0.2em]">
+              <label htmlFor="password" className="block text-[10px] font-black text-black dark:text-white mb-2 uppercase tracking-[0.2em]">
                 Passcode
               </label>
               <input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -154,7 +164,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="mt-12 text-center text-[10px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-widest">
+        <p className="mt-12 text-center text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
           Authorized Personnel Only
         </p>
       </div>

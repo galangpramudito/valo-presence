@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/'], // Kamu bisa tambahkan route rahasia yang tidak mau diindeks bot Google di sini
+      disallow: ['/api/', '/admin/', '/absen/', '/riwayat/'], // Hide internal/auth-only routes
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   };
