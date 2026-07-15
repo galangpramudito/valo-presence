@@ -16,6 +16,8 @@ Modern attendance tracking system built with Next.js 16, TypeScript, Supabase, a
 
 ✅ **Attendance Management**
 - Upload attendance proof (image)
+- Text-based excuse/permission submission (Izin) with validation
+- Strict double check-in prevention
 - Camera capture support (WebCam/Mobile)
 - Drag & drop file upload
 - Server-side file validation
@@ -172,7 +174,8 @@ Modern attendance tracking system built with Next.js 16, TypeScript, Supabase, a
 - `clearMVPs()` - Clear MVP rankings
 
 ### Attendance (`src/app/actions.ts`)
-- `uploadAbsensi(formData)` - Upload attendance
+- `uploadAbsensi(formData)` - Upload attendance (image proof)
+- `submitIzin(formData)` - Submit text-based excuse (Izin)
 
 ## Security Best Practices
 
@@ -194,7 +197,8 @@ Default rate limits (configurable in `src/lib/constants.ts`):
 
 See `supabase/migrations/` for full schema:
 - `squad_members` - User accounts
-- `absensi` - Attendance records
+- `schedules` - Active schedules / meeting times
+- `absensi` - Attendance & excuse records
 - `announcements` - Broadcast messages
 - `mvps` - MVP rankings
 - `audit_logs` - Audit trail
