@@ -4,9 +4,7 @@
 export const AUTH_COOKIE_NAME = 'auth_token';
 export const SESSION_DURATION = 60 * 60 * 24 * 30; // 30 days in seconds
 
-// Admin credentials (temporary fallback)
-export const ADMIN_USERNAME = 'ADMIN';
-export const ADMIN_PASSWORD = 'ADMIN123'; // Should be changed in production
+// Admin credentials (migrated to database - see supabase/migrations/20260715000005_create_default_admin.sql)
 
 // File upload constraints
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB

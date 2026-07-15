@@ -144,10 +144,20 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
         setToast({ message: 'Izin terkirim! Redirecting...', type: 'success' });
         setTimeout(() => router.push('/riwayat'), 1500);
       } catch (error) {
+        console.error('Submit Izin error:', error);
         let errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
-        if (errorMessage.toLowerCase() === 'failed to fetch') {
+        
+        const lowerError = errorMessage.toLowerCase();
+        if (lowerError.includes('failed to fetch')) {
           errorMessage = 'Koneksi bermasalah. Pastikan internet stabil dan coba lagi.';
+        } else if (lowerError.includes('payload too large') || lowerError.includes('413')) {
+          errorMessage = 'File terlalu besar. Server menolak permintaan.';
+        } else if (lowerError.includes('unexpected token') || lowerError.includes('json') || lowerError.includes('parse')) {
+          errorMessage = 'Gangguan pada server. Silakan coba beberapa saat lagi.';
+        } else if (lowerError.includes('network') || lowerError.includes('server')) {
+          errorMessage = 'Terjadi kendala jaringan/server. Coba lagi nanti.';
         }
+        
         setToast({ message: errorMessage, type: 'error' });
       } finally {
         setIsSubmitting(false);
@@ -174,10 +184,20 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
       setToast({ message: 'Upload complete! Redirecting...', type: 'success' });
       setTimeout(() => router.push('/riwayat'), 1500);
     } catch (error) {
+      console.error('Upload Absen error:', error);
       let errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
-      if (errorMessage.toLowerCase() === 'failed to fetch') {
+      
+      const lowerError = errorMessage.toLowerCase();
+      if (lowerError.includes('failed to fetch')) {
         errorMessage = 'Koneksi bermasalah. Pastikan internet stabil dan coba lagi.';
+      } else if (lowerError.includes('payload too large') || lowerError.includes('413')) {
+        errorMessage = 'Ukuran foto terlalu besar. Maksimal 5MB.';
+      } else if (lowerError.includes('unexpected token') || lowerError.includes('json') || lowerError.includes('parse')) {
+        errorMessage = 'Gangguan pada server. Silakan coba beberapa saat lagi.';
+      } else if (lowerError.includes('network') || lowerError.includes('server')) {
+        errorMessage = 'Terjadi kendala jaringan/server. Coba lagi nanti.';
       }
+      
       setToast({ message: errorMessage, type: 'error' });
     } finally {
       setIsSubmitting(false);

@@ -376,8 +376,8 @@ export async function createSchedule(formData: FormData) {
 
     const { error } = await supabase.from('schedules').insert({
       title,
-      start_time: startTimeStr,
-      end_time: endTimeStr,
+      start_time: startTimeStr.includes('+') ? startTimeStr : `${startTimeStr}+07:00`,
+      end_time: endTimeStr.includes('+') ? endTimeStr : `${endTimeStr}+07:00`,
     });
 
     if (error) return { error: error.message };

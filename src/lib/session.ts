@@ -1,8 +1,12 @@
 import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'fallback-secret-key-change-this-in-production'
-);
+if (!process.env.JWT_SECRET) {
+  throw new Error(
+    'FATAL: JWT_SECRET is not defined. Please set it in your .env.local file or environment variables.'
+  );
+}
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 const JWT_ALGORITHM = 'HS256';
 const TOKEN_EXPIRY = '30d'; // 30 days

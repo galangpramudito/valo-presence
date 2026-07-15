@@ -24,7 +24,7 @@ export default function BroadcastBanner() {
   };
 
   useEffect(() => {
-    fetchAnnouncement();
+    const timer = setTimeout(() => fetchAnnouncement(), 0);
 
     // Subscribe to changes in the announcements table
     const channel = supabase.channel('announcement_changes')
@@ -34,6 +34,7 @@ export default function BroadcastBanner() {
       .subscribe();
 
     return () => {
+      clearTimeout(timer);
       supabase.removeChannel(channel);
     };
   }, []);

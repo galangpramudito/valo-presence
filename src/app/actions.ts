@@ -1,17 +1,39 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { supabase } from '@/lib/supabase';
 import { validateFile, generateUniqueFilename } from '@/lib/file-utils';
 import { rateLimit } from '@/lib/rate-limit';
-import { getRateLimitIdentifier } from '@/lib/rate-limit-utils';
-import { STORAGE_BUCKET, RATE_LIMIT } from '@/lib/constants';
+import { STORAGE_BUCKET, RATE_LIMIT, AUTH_COOKIE_NAME } from '@/lib/constants';
+import { uploadAbsensiSchema, submitIzinSchema } from '@/lib/validations';
+import { getSession } from '@/lib/session';
+
 
 const uploadRateLimiter = rateLimit('upload', RATE_LIMIT.UPLOAD);
 
+async function checkAuthenticatedUser() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+  if (!token) {
+    throw new Error('Unauthorized: No session');
+  }
+
+  const session = await getSession(token);
+
+  if (!session) {
+    throw new Error('Unauthorized: Invalid session');
+  }
+
+  return session;
+}
+
 export async function uploadAbsensi(formData: FormData) {
   try {
-    // Get unique identifier for rate limiting (IP + User Agent)
-    const identifier = await getRateLimitIdentifier();
+    const session = await checkAuthenticatedUser();
+
+    // Use user ID for rate limiting
+    const identifier = `user:${session.userId}`;
 
     // Rate limiting
     const rateLimitResult = uploadRateLimiter.check(identifier);
@@ -22,17 +44,18 @@ export async function uploadAbsensi(formData: FormData) {
       };
     }
 
-    const nama = formData.get('nama') as string;
-    const file = formData.get('file') as File;
-    const scheduleId = formData.get('schedule_id') as string | null;
+    const validation = uploadAbsensiSchema.safeParse({
+      nama: session.nama, // SECURITY FIX: force use session name instead of client input
+      file: formData.get('file'),
+      schedule_id: formData.get('schedule_id'),
+    });
 
-    if (!nama || !file) {
-      return { error: 'Nama dan file diperlukan' };
+    if (!validation.success) {
+      return { error: validation.error.issues[0].message };
     }
 
-    if (!scheduleId) {
-      return { error: 'Jadwal absensi tidak valid atau tidak dipilih' };
-    }
+    const { nama, file, schedule_id: scheduleId } = validation.data;
+
 
     // Check for duplicate attendance
     const { data: existingAbsensi } = await supabase
@@ -52,8 +75,11 @@ export async function uploadAbsensi(formData: FormData) {
     
     if (schedule) {
       const now = new Date();
-      const startTime = new Date(schedule.start_time);
-      const endTime = new Date(schedule.end_time);
+      const startStr = schedule.start_time.includes('+') || schedule.start_time.endsWith('Z') ? schedule.start_time : schedule.start_time + '+07:00';
+      const endStr = schedule.end_time.includes('+') || schedule.end_time.endsWith('Z') ? schedule.end_time : schedule.end_time + '+07:00';
+      
+      const startTime = new Date(startStr);
+      const endTime = new Date(endStr);
       
       if (now < startTime) {
         const startTimeStr = startTime.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
@@ -68,9 +94,9 @@ export async function uploadAbsensi(formData: FormData) {
     }
 
     // Validate file on server-side
-    const validation = validateFile(file);
-    if (!validation.valid) {
-      return { error: validation.error };
+    const fileValidation = validateFile(file);
+    if (!fileValidation.valid) {
+      return { error: fileValidation.error };
     }
 
     // Generate unique filename
@@ -129,24 +155,27 @@ export async function uploadAbsensi(formData: FormData) {
 
 export async function submitIzin(formData: FormData) {
   try {
-    const identifier = await getRateLimitIdentifier();
+    const session = await checkAuthenticatedUser();
+
+    // Use user ID for rate limiting
+    const identifier = `user:${session.userId}`;
     const rateLimitResult = uploadRateLimiter.check(identifier);
     if (!rateLimitResult.success) {
       const waitMinutes = Math.ceil((rateLimitResult.resetTime - Date.now()) / 60000);
       return { error: `Terlalu banyak request. Coba lagi dalam ${waitMinutes} menit.` };
     }
 
-    const nama = formData.get('nama') as string;
-    const scheduleId = formData.get('schedule_id') as string;
-    const alasan = formData.get('alasan') as string;
+    const validation = submitIzinSchema.safeParse({
+      nama: session.nama, // SECURITY FIX: force use session name instead of client input
+      schedule_id: formData.get('schedule_id'),
+      alasan: formData.get('alasan'),
+    });
 
-    if (!nama || !scheduleId || !alasan) {
-      return { error: 'Nama, jadwal, dan alasan diperlukan' };
+    if (!validation.success) {
+      return { error: validation.error.issues[0].message };
     }
-    
-    if (alasan.trim().length < 10) {
-      return { error: 'Alasan terlalu singkat. Jelaskan dengan detail!' };
-    }
+
+    const { nama, schedule_id: scheduleId, alasan } = validation.data;
 
     // Validate schedule exists
     const { data: schedule } = await supabase.from('schedules').select('id').eq('id', scheduleId).maybeSingle();

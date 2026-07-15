@@ -15,7 +15,8 @@ export default function Navbar({ nama, role }: { nama: string; role?: string }) 
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const links = role === 'admin' 

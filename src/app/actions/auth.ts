@@ -8,7 +8,7 @@ import { createSessionToken } from '@/lib/session';
 import { loginSchema } from '@/lib/validations';
 import { rateLimit } from '@/lib/rate-limit';
 import { getRateLimitIdentifier } from '@/lib/rate-limit-utils';
-import { AUTH_COOKIE_NAME, SESSION_DURATION, RATE_LIMIT, ADMIN_USERNAME, ADMIN_PASSWORD } from '@/lib/constants';
+import { AUTH_COOKIE_NAME, SESSION_DURATION, RATE_LIMIT } from '@/lib/constants';
 
 const loginRateLimiter = rateLimit('login', RATE_LIMIT.LOGIN);
 
@@ -38,25 +38,7 @@ export async function login(formData: FormData) {
 
     const { nama, password } = validation.data;
 
-    // Hardcoded Admin Fallback (temporary - should be migrated to DB)
-    if (nama === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      const token = await createSessionToken({
-        userId: 'admin',
-        nama: ADMIN_USERNAME,
-        role: 'admin',
-      });
 
-      const cookieStore = await cookies();
-      cookieStore.set(AUTH_COOKIE_NAME, token, {
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: SESSION_DURATION,
-      });
-
-      return { success: true };
-    }
 
     // Fetch from DB
     const { data, error } = await supabase

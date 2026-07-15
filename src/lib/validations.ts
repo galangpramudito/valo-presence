@@ -25,6 +25,7 @@ export const deleteMemberSchema = z.object({
 export const uploadAbsensiSchema = z.object({
   nama: z.string().min(1, 'Nama wajib diisi'),
   file: z.any().refine((file) => file instanceof File, 'File wajib diupload'),
+  schedule_id: z.string().uuid('ID Jadwal tidak valid'),
 });
 
 // Broadcast schema
@@ -48,3 +49,11 @@ export type DeleteMemberInput = z.infer<typeof deleteMemberSchema>;
 export type UploadAbsensiInput = z.infer<typeof uploadAbsensiSchema>;
 export type BroadcastInput = z.infer<typeof broadcastSchema>;
 export type MVPInput = z.infer<typeof mvpSchema>;
+
+export const submitIzinSchema = z.object({
+  nama: z.string().min(1, 'Nama wajib diisi'),
+  schedule_id: z.string().uuid('ID Jadwal tidak valid'),
+  alasan: z.string().min(10, 'Alasan terlalu singkat. Jelaskan dengan detail!'),
+});
+
+export type SubmitIzinInput = z.infer<typeof submitIzinSchema>;

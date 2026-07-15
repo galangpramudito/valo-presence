@@ -20,16 +20,17 @@ export default function LoginPage() {
   const [membersList, setMembersList] = useState<string[]>([]);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
     // Fetch members dynamically
     const fetchMembers = async () => {
       const { supabase } = await import('@/lib/supabase');
-      const { data, error } = await supabase.from('squad_members').select('nama').order('nama', { ascending: true });
+      const { data, error } = await supabase.from('squad_members').select('nama').neq('nama', 'ADMIN').order('nama', { ascending: true });
       if (data && !error && data.length > 0) {
         setMembersList(data.map(m => m.nama));
       }
     };
     fetchMembers();
+    return () => clearTimeout(timer);
   }, []);
 
   const toggleTheme = () => {
