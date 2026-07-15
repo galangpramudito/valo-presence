@@ -26,7 +26,17 @@ export const metadata: Metadata = {
   title: "MNG Group · Attendance System",
   description:
     "Attendance system for MNG Group.",
-  keywords: ["valorant", "absensi", "mng group", "attendance"],
+  keywords: [
+    "valorant",
+    "absensi",
+    "mng group",
+    "attendance",
+    "mangan",
+    "mangan group",
+    "mangan valorant",
+    "mangan esports",
+    "absensi mangan",
+  ],
 };
 
 export default async function RootLayout({
