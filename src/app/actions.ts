@@ -41,8 +41,8 @@ export async function uploadAbsensi(formData: FormData) {
         const endTime = new Date(schedule.end_time);
         
         if (now < startTime) {
-          const startTimeStr = startTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
-          return { error: `Absen belum dibuka! Silakan kembali pada pukul ${startTimeStr}` };
+          const startTimeStr = startTime.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
+          return { error: `Absen belum dibuka! Silakan kembali pada pukul ${startTimeStr} WIB` };
         }
         
         if (now > endTime) {
