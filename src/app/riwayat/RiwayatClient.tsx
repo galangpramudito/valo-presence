@@ -188,39 +188,51 @@ export default function RiwayatClient({ initialRecords }: RiwayatClientProps) {
                     </div>
                   </div>
 
-                  {/* Image Preview */}
-                  <div
-                    className="relative group cursor-pointer bg-black/20 overflow-hidden aspect-video"
-                    onClick={() => setLightbox(record.image_url)}
-                  >
-                    <Image
-                      src={record.image_url}
-                      alt={`Screenshot oleh ${record.nama}`}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
-                    
-                    {/* Overlay on hover */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-white/0 group-hover:bg-white/90 flex items-center justify-center transition-all duration-300 scale-75 group-hover:scale-100">
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="text-transparent group-hover:text-surface"
-                        >
-                          <circle cx="11" cy="11" r="8" />
-                          <path d="M21 21l-4.35-4.35" />
-                          <line x1="11" y1="8" x2="11" y2="14" />
-                          <line x1="8" y1="11" x2="14" y2="11" />
-                        </svg>
+                  {/* Image Preview or Reason Text */}
+                  {record.status === 'IZIN' ? (
+                    <div className="bg-surface-raised p-6 border-t border-border-subtle aspect-video flex flex-col justify-center items-center text-center">
+                      <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 mb-3">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                      </div>
+                      <h4 className="text-sm font-bold text-blue-500 mb-2 uppercase tracking-widest">Excused / Izin</h4>
+                      <p className="text-sm text-text-primary italic line-clamp-3 px-4">"{record.alasan || 'Tidak ada alasan'}"</p>
+                    </div>
+                  ) : (
+                    <div
+                      className="relative group cursor-pointer bg-black/20 overflow-hidden aspect-video"
+                      onClick={() => record.image_url ? setLightbox(record.image_url) : null}
+                    >
+                      {record.image_url ? (
+                        <Image
+                          src={record.image_url}
+                          alt={`Screenshot oleh ${record.nama}`}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                        />
+                      ) : null}
+                      
+                      {/* Overlay on hover */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-white/0 group-hover:bg-white/90 flex items-center justify-center transition-all duration-300 scale-75 group-hover:scale-100">
+                          <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="text-transparent group-hover:text-surface"
+                          >
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="M21 21l-4.35-4.35" />
+                            <line x1="11" y1="8" x2="11" y2="14" />
+                            <line x1="8" y1="11" x2="14" y2="11" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
