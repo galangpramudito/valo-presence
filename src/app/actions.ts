@@ -30,25 +30,41 @@ export async function uploadAbsensi(formData: FormData) {
       return { error: 'Nama dan file diperlukan' };
     }
 
-    // Determine status if schedule exists
+    if (!scheduleId) {
+      return { error: 'Jadwal absensi tidak valid atau tidak dipilih' };
+    }
+
+    // Check for duplicate attendance
+    const { data: existingAbsensi } = await supabase
+      .from('absensi')
+      .select('id')
+      .eq('nama', nama)
+      .eq('schedule_id', scheduleId)
+      .maybeSingle();
+
+    if (existingAbsensi) {
+      return { error: 'Kamu sudah mengisi absensi untuk jadwal ini!' };
+    }
+
+    // Determine status
     let status = 'PRESENT';
-    if (scheduleId) {
-      const { data: schedule } = await supabase.from('schedules').select('start_time, end_time').eq('id', scheduleId).single();
+    const { data: schedule } = await supabase.from('schedules').select('start_time, end_time').eq('id', scheduleId).single();
+    
+    if (schedule) {
+      const now = new Date();
+      const startTime = new Date(schedule.start_time);
+      const endTime = new Date(schedule.end_time);
       
-      if (schedule) {
-        const now = new Date();
-        const startTime = new Date(schedule.start_time);
-        const endTime = new Date(schedule.end_time);
-        
-        if (now < startTime) {
-          const startTimeStr = startTime.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
-          return { error: `Absen belum dibuka! Silakan kembali pada pukul ${startTimeStr} WIB` };
-        }
-        
-        if (now > endTime) {
-          status = 'LATE';
-        }
+      if (now < startTime) {
+        const startTimeStr = startTime.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
+        return { error: `Absen belum dibuka! Silakan kembali pada pukul ${startTimeStr} WIB` };
       }
+      
+      if (now > endTime) {
+        status = 'LATE';
+      }
+    } else {
+      return { error: 'Jadwal tidak ditemukan di sistem' };
     }
 
     // Validate file on server-side
