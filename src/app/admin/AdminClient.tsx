@@ -65,8 +65,8 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
     }
 
     if (filterDate) {
-      // Compare YYYY-MM-DD string
-      const recordDate = new Date(record.created_at).toISOString().split('T')[0];
+      const d = new Date(record.created_at);
+      const recordDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       matchDate = recordDate === filterDate;
     }
 
@@ -160,7 +160,9 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
     if (filterDate) {
       filename += `_${filterDate}`;
     }
-    filename += `_${new Date().toISOString().split('T')[0]}.csv`;
+    const now = new Date();
+    const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    filename += `_${localDateStr}.csv`;
     
     link.setAttribute('download', filename);
     document.body.appendChild(link);
@@ -306,8 +308,8 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
     
     setIsLoading(true);
     try {
-      const start_time = new Date(`${scheduleDate}T${scheduleStartTime}:00`).toISOString();
-      const end_time = new Date(`${scheduleDate}T${scheduleEndTime}:00`).toISOString();
+      const start_time = `${scheduleDate}T${scheduleStartTime}:00`;
+      const end_time = `${scheduleDate}T${scheduleEndTime}:00`;
 
       const formData = new FormData();
       formData.append('title', scheduleTitle);

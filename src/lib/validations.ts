@@ -2,12 +2,12 @@ import { z } from 'zod';
 
 // Auth schemas
 export const loginSchema = z.object({
-  nama: z.string().min(1, 'Nama wajib diisi'),
+  nama: z.string().trim().min(1, 'Nama wajib diisi'),
   password: z.string().min(1, 'Password wajib diisi'),
 });
 
 export const addMemberSchema = z.object({
-  nama: z.string().min(2, 'Nama minimal 2 karakter').max(50, 'Nama maksimal 50 karakter'),
+  nama: z.string().trim().min(2, 'Nama minimal 2 karakter').max(50, 'Nama maksimal 50 karakter'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
   role: z.enum(['admin', 'user']).default('user'),
 });
