@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { getSession } from '@/lib/session';
 import { AUTH_COOKIE_NAME } from '@/lib/constants';
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
   const isLoginPage = request.nextUrl.pathname === '/login';
   const isAdminPage = request.nextUrl.pathname.startsWith('/admin');

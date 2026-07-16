@@ -200,7 +200,7 @@ export async function submitIzin(formData: FormData) {
       schedule_id: scheduleId, 
       status: 'IZIN', 
       alasan: alasan.trim(),
-      image_url: null 
+      image_url: '' 
     };
 
     const { error: insertError } = await supabase
