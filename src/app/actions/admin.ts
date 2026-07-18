@@ -374,6 +374,13 @@ export async function createSchedule(formData: FormData) {
       return { error: 'Semua field harus diisi' };
     }
 
+    // Validate end_time > start_time
+    const startParsed = new Date(startTimeStr.includes('+') ? startTimeStr : `${startTimeStr}+07:00`);
+    const endParsed = new Date(endTimeStr.includes('+') ? endTimeStr : `${endTimeStr}+07:00`);
+    if (endParsed <= startParsed) {
+      return { error: 'Waktu selesai harus setelah waktu mulai' };
+    }
+
     const { error } = await supabase.from('schedules').insert({
       title,
       start_time: startTimeStr.includes('+') ? startTimeStr : `${startTimeStr}+07:00`,
@@ -403,6 +410,46 @@ export async function deleteSchedule(formData: FormData) {
     if (error) return { error: error.message };
     
     revalidatePath('/admin');
+    revalidatePath('/absen');
+    return { success: true };
+  } catch (error) {
+    return { 
+      error: error instanceof Error ? error.message : 'Terjadi kesalahan' 
+    };
+  }
+}
+
+export async function updateSchedule(formData: FormData) {
+  try {
+    const session = await checkAdmin();
+    await checkRateLimit(session);
+
+    const id = formData.get('id') as string;
+    const title = formData.get('title') as string;
+    const startTimeStr = formData.get('start_time') as string;
+    const endTimeStr = formData.get('end_time') as string;
+
+    if (!id || !title || !startTimeStr || !endTimeStr) {
+      return { error: 'Semua field harus diisi' };
+    }
+
+    // Validate end_time > start_time
+    const startParsed = new Date(startTimeStr.includes('+') ? startTimeStr : `${startTimeStr}+07:00`);
+    const endParsed = new Date(endTimeStr.includes('+') ? endTimeStr : `${endTimeStr}+07:00`);
+    if (endParsed <= startParsed) {
+      return { error: 'Waktu selesai harus setelah waktu mulai' };
+    }
+
+    const { error } = await supabase.from('schedules').update({
+      title,
+      start_time: startTimeStr.includes('+') ? startTimeStr : `${startTimeStr}+07:00`,
+      end_time: endTimeStr.includes('+') ? endTimeStr : `${endTimeStr}+07:00`,
+    }).eq('id', id);
+
+    if (error) return { error: error.message };
+    
+    revalidatePath('/admin');
+    revalidatePath('/admin/schedules/[id]', 'page');
     revalidatePath('/absen');
     return { success: true };
   } catch (error) {

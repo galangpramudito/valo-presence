@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { supabase } from "@/lib/supabase";
 import BroadcastBanner from "@/components/BroadcastBanner";
 import { getSession } from "@/lib/session";
+import { Suspense } from "react";
 import { AUTH_COOKIE_NAME } from "@/lib/constants";
 
 const inter = Inter({
@@ -114,7 +115,11 @@ export default async function RootLayout({
     <html lang="id" className={`${inter.variable} ${montserrat.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
       <body className="min-h-screen bg-background text-foreground antialiased font-[family-name:var(--font-inter)] selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {session && <Navbar nama={session.nama} role={session.role} />}
+          {session && (
+            <Suspense fallback={<div className="h-14 sm:h-16 border-b border-black/5 dark:border-white/10" />}>
+              <Navbar nama={session.nama} role={session.role} />
+            </Suspense>
+          )}
 
           {session && <BroadcastBanner />}
 

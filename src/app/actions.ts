@@ -82,7 +82,7 @@ export async function uploadAbsensi(formData: FormData) {
       const endTime = new Date(endStr);
       
       if (now < startTime) {
-        const startTimeStr = startTime.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
+        const startTimeStr = startTime.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false }).replace(/\./g, ':');
         return { error: `Absen belum dibuka! Silakan kembali pada pukul ${startTimeStr} WIB` };
       }
       

@@ -224,8 +224,8 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
             >
               <option value="" className="text-black dark:text-white">-- PILIH JADWAL --</option>
               {schedules.map(s => {
-                const start = new Date(s.start_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
-                const end = new Date(s.end_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
+                const start = new Date(s.start_time).toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false }).replace(/\./g, ':');
+                const end = new Date(s.end_time).toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false }).replace(/\./g, ':');
                 return (
                   <option key={s.id} value={s.id} className="text-black dark:text-white">
                     {s.title} ({start} - {end})

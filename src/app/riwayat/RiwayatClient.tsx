@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { AbsensiRecord } from '@/lib/supabase';
@@ -12,9 +12,15 @@ interface RiwayatClientProps {
 export default function RiwayatClient({ initialRecords }: RiwayatClientProps) {
   const [records] = useState<AbsensiRecord[]>(initialRecords);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('id-ID', {
+      timeZone: 'Asia/Jakarta',
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -22,8 +28,10 @@ export default function RiwayatClient({ initialRecords }: RiwayatClientProps) {
 
   const formatTime = (d: string) =>
     new Date(d).toLocaleTimeString('id-ID', {
+      timeZone: 'Asia/Jakarta',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     });
 
   const getInitial = (name: string) => name.charAt(0).toUpperCase();
@@ -183,7 +191,11 @@ export default function RiwayatClient({ initialRecords }: RiwayatClientProps) {
                         {record.nama}
                       </h3>
                       <p className="text-xs text-text-muted">
-                        {formatDate(record.created_at)} · {formatTime(record.created_at)}
+                        {!isMounted ? (
+                          <span className="opacity-0">Loading time...</span>
+                        ) : (
+                          <>{formatDate(record.created_at)} · {formatTime(record.created_at)}</>
+                        )}
                       </p>
                     </div>
                   </div>

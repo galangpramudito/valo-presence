@@ -14,7 +14,7 @@ export default function BroadcastBanner() {
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (data && data.message) {
       setMessage(data.message);

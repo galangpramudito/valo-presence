@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { supabase, type AbsensiRecord } from '@/lib/supabase';
+import { Suspense } from 'react';
 import AdminClient from './AdminClient';
 import type { SquadMember } from '@/types';
 import { getSession } from '@/lib/session';
@@ -43,11 +44,13 @@ export default async function AdminPage() {
     .order('start_time', { ascending: false });
 
   return (
-    <AdminClient 
-      initialAbsensi={(absensiData as AbsensiRecord[]) || []} 
-      initialMembers={(memberData as SquadMember[]) || []} 
-      initialMvps={mvpData || []}
-      initialSchedules={scheduleData || []}
-    />
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-[10px] font-black uppercase tracking-widest text-black dark:text-white">Loading Command Center...</div>}>
+      <AdminClient 
+        initialAbsensi={(absensiData as AbsensiRecord[]) || []} 
+        initialMembers={(memberData as SquadMember[]) || []} 
+        initialMvps={mvpData || []}
+        initialSchedules={scheduleData || []}
+      />
+    </Suspense>
   );
 }

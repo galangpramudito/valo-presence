@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { AbsensiRecord } from '@/lib/supabase';
 import type { SquadMember } from '@/types';
 import Toast from '@/components/Toast';
@@ -18,12 +19,18 @@ interface AdminClientProps {
 
 export default function AdminClient({ initialAbsensi, initialMembers, initialMvps, initialSchedules }: AdminClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'attendance' | 'members' | 'broadcast' | 'mvp' | 'schedule'>('attendance');
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'attendance';
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   
   // Loading state for forms
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Form states
   const [newNama, setNewNama] = useState('');
@@ -34,9 +41,9 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
 
   // Schedule States
   const [scheduleTitle, setScheduleTitle] = useState('');
-  const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleStartTime, setScheduleStartTime] = useState('');
   const [scheduleEndTime, setScheduleEndTime] = useState('');
+  const [showClosedSchedules, setShowClosedSchedules] = useState(false);
   
   // MVP States
   const [mvp1, setMvp1] = useState(initialMvps.find(m => m.rank === 1) || { rank: 1, nama: '', pts: 0 });
@@ -44,10 +51,10 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
   const [mvp3, setMvp3] = useState(initialMvps.find(m => m.rank === 3) || { rank: 3, nama: '', pts: 0 });
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+    new Date(d).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
 
   const formatTime = (d: string) =>
-    new Date(d).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+    new Date(d).toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/\./g, ':');
 
   const getInitial = (name: string) => name.charAt(0).toUpperCase();
 
@@ -65,8 +72,10 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
     }
 
     if (filterDate) {
+      // Use WIB timezone for consistent date filtering
       const d = new Date(record.created_at);
-      const recordDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const formatter = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' });
+      const recordDate = formatter.format(d);
       matchDate = recordDate === filterDate;
     }
 
@@ -301,15 +310,16 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
 
   const handleCreateSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!scheduleTitle || !scheduleDate || !scheduleStartTime || !scheduleEndTime) {
+    if (!scheduleTitle || !scheduleStartTime || !scheduleEndTime) {
       setToast({ message: 'Lengkapi semua field!', type: 'error' });
       return;
     }
     
     setIsLoading(true);
     try {
-      const start_time = `${scheduleDate}T${scheduleStartTime}:00`;
-      const end_time = `${scheduleDate}T${scheduleEndTime}:00`;
+      // datetime-local returns YYYY-MM-DDTHH:MM
+      const start_time = `${scheduleStartTime}:00`;
+      const end_time = `${scheduleEndTime}:00`;
 
       const formData = new FormData();
       formData.append('title', scheduleTitle);
@@ -322,7 +332,6 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
       } else {
         setToast({ message: 'Jadwal berhasil dibuat!', type: 'success' });
         setScheduleTitle('');
-        setScheduleDate('');
         setScheduleStartTime('');
         setScheduleEndTime('');
         router.refresh();
@@ -366,42 +375,16 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
         <div className="max-w-5xl mx-auto">
           
           <div className="mb-10">
-            <h1 className="text-3xl font-[family-name:var(--font-montserrat)] font-black tracking-widest text-black dark:text-white uppercase mb-6">
+            <h1 className="text-3xl font-[family-name:var(--font-montserrat)] font-black tracking-widest text-black dark:text-white uppercase mb-2">
               Command Center
             </h1>
-            
-            <div className="flex flex-wrap items-center gap-4 border-b border-black/10 dark:border-white/10 pb-4">
-              <button 
-                onClick={() => setActiveTab('attendance')}
-                className={`px-6 py-3 text-[11px] font-black tracking-widest uppercase transition-all border-b-2 ${activeTab === 'attendance' ? 'border-black dark:border-white text-black dark:text-white' : 'border-transparent text-gray-400 hover:text-black dark:hover:text-white'}`}
-              >
-                Radar Monitor ({filteredAbsensi.length})
-              </button>
-              <button 
-                onClick={() => setActiveTab('broadcast')}
-                className={`px-6 py-3 text-[11px] font-black tracking-widest uppercase transition-all border-b-2 ${activeTab === 'broadcast' ? 'border-red-500 text-red-500' : 'border-transparent text-gray-400 hover:text-red-500'}`}
-              >
-                Global Broadcast
-              </button>
-              <button 
-                onClick={() => setActiveTab('members')}
-                className={`px-6 py-3 text-[11px] font-black tracking-widest uppercase transition-all border-b-2 ${activeTab === 'members' ? 'border-black dark:border-white text-black dark:text-white' : 'border-transparent text-gray-400 hover:text-black dark:hover:text-white'}`}
-              >
-                Squad Config ({initialMembers.length})
-              </button>
-              <button 
-                onClick={() => setActiveTab('mvp')}
-                className={`px-6 py-3 text-[11px] font-black tracking-widest uppercase transition-all border-b-2 ${activeTab === 'mvp' ? 'border-yellow-500 text-yellow-500' : 'border-transparent text-gray-400 hover:text-yellow-500'}`}
-              >
-                MVP Assessor
-              </button>
-              <button 
-                onClick={() => setActiveTab('schedule')}
-                className={`px-6 py-3 text-[11px] font-black tracking-widest uppercase transition-all border-b-2 ${activeTab === 'schedule' ? 'border-emerald-500 text-emerald-500' : 'border-transparent text-gray-400 hover:text-emerald-500'}`}
-              >
-                Schedule ({initialSchedules.length})
-              </button>
-            </div>
+            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+              {activeTab === 'attendance' && 'Radar Monitor - Pantau Kehadiran'}
+              {activeTab === 'schedule' && 'Schedule - Kelola Jadwal Shift'}
+              {activeTab === 'members' && 'Squad Config - Kelola Operator'}
+              {activeTab === 'broadcast' && 'Global Broadcast - Kirim Pengumuman'}
+              {activeTab === 'mvp' && 'MVP Assessor - Tentukan MVP'}
+            </p>
           </div>
 
           {/* TAB 1: RADAR MONITOR */}
@@ -467,9 +450,15 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
                             {record.nama}
                           </p>
                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-[10px] sm:text-[11px] font-bold text-gray-500 tracking-[0.2em] uppercase mt-1">
-                            <span>{formatDate(record.created_at)}</span>
-                            <span className="hidden sm:block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
-                            <span className="text-black dark:text-white">{formatTime(record.created_at)} LOCAL</span>
+                            {!isMounted ? (
+                              <span className="opacity-0">Loading time...</span>
+                            ) : (
+                              <>
+                                <span>{formatDate(record.created_at)}</span>
+                                <span className="hidden sm:block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
+                                <span className="text-black dark:text-white">{formatTime(record.created_at)} LOCAL</span>
+                              </>
+                            )}
                           </div>
                           {record.status === 'IZIN' && record.alasan && (
                             <div className="mt-2 text-[11px] font-bold text-blue-500 border-l-2 border-blue-500 pl-3">
@@ -613,9 +602,11 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
                             {member.nama}
                             {member.role === 'admin' && <span className="px-2 py-0.5 bg-red-500 text-white text-[9px] tracking-widest">ADMIN</span>}
                           </p>
-                          <p className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase mt-1">
-                            Joined {new Date(member.created_at).toLocaleDateString()}
-                          </p>
+                          {isMounted && (
+                            <p className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase mt-1">
+                              Joined {new Date(member.created_at).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta' })}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -789,7 +780,7 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
                 </div>
 
                 <form onSubmit={handleCreateSchedule} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div>
                       <label className="block text-[10px] font-black text-black dark:text-white mb-2 uppercase tracking-widest">Judul Kegiatan</label>
                       <input 
@@ -800,31 +791,24 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
                         className="w-full px-4 py-3 border border-black/20 dark:border-white/20 bg-transparent text-sm text-black dark:text-white focus:outline-none focus:border-emerald-500"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-black dark:text-white mb-2 uppercase tracking-widest">Tanggal</label>
-                      <input 
-                        type="date" 
-                        value={scheduleDate}
-                        onChange={(e) => setScheduleDate(e.target.value)}
-                        className="w-full px-4 py-3 border border-black/20 dark:border-white/20 bg-transparent text-sm text-black dark:text-white focus:outline-none focus:border-emerald-500"
-                      />
-                    </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-black text-black dark:text-white mb-2 uppercase tracking-widest">Waktu Mulai (Absen Dibuka)</label>
+                    <div className="border border-emerald-500/20 bg-emerald-500/5 p-4 relative">
+                      <div className="absolute top-0 right-0 px-2 py-1 bg-emerald-500 text-white text-[8px] font-black tracking-widest uppercase">Start</div>
+                      <label className="block text-[10px] font-black text-black dark:text-white mb-2 uppercase tracking-widest">Tgl & Jam Absen Dibuka</label>
                       <input 
-                        type="time" 
+                        type="datetime-local" 
                         value={scheduleStartTime}
                         onChange={(e) => setScheduleStartTime(e.target.value)}
                         className="w-full px-4 py-3 border border-black/20 dark:border-white/20 bg-transparent text-sm text-black dark:text-white focus:outline-none focus:border-emerald-500"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-black dark:text-white mb-2 uppercase tracking-widest">Waktu Berakhir (Batas Telat)</label>
+                    <div className="border border-red-500/20 bg-red-500/5 p-4 relative">
+                      <div className="absolute top-0 right-0 px-2 py-1 bg-red-500 text-white text-[8px] font-black tracking-widest uppercase">End</div>
+                      <label className="block text-[10px] font-black text-black dark:text-white mb-2 uppercase tracking-widest">Tgl & Jam Batas Telat</label>
                       <input 
-                        type="time" 
+                        type="datetime-local" 
                         value={scheduleEndTime}
                         onChange={(e) => setScheduleEndTime(e.target.value)}
                         className="w-full px-4 py-3 border border-black/20 dark:border-white/20 bg-transparent text-sm text-black dark:text-white focus:outline-none focus:border-emerald-500"
@@ -844,14 +828,38 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
 
               {/* List of Schedules */}
               <div>
-                <h3 className="text-sm font-black tracking-widest uppercase text-black dark:text-white mb-4">Upcoming & Past Schedules</h3>
-                {initialSchedules.length === 0 ? (
-                  <div className="p-8 border border-black/10 dark:border-white/10 text-center bg-black/5 dark:bg-white/5">
-                    <p className="text-[12px] font-bold text-gray-500 uppercase tracking-widest">Belum ada jadwal</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {initialSchedules.map((sched) => {
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-black tracking-widest uppercase text-black dark:text-white">
+                    {showClosedSchedules ? 'Closed Schedules' : 'Active Schedules'}
+                  </h3>
+                  <button 
+                    onClick={() => setShowClosedSchedules(!showClosedSchedules)}
+                    className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest border transition-colors ${showClosedSchedules ? 'border-red-500 text-red-500 hover:bg-red-500 hover:text-white' : 'border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white dark:hover:text-black'}`}
+                  >
+                    {showClosedSchedules ? 'Show Active' : 'Show Closed'}
+                  </button>
+                </div>
+                
+                {(() => {
+                  const now = new Date();
+                  const filteredSchedules = initialSchedules.filter(sched => {
+                    const isClosed = new Date(sched.end_time) < now;
+                    return showClosedSchedules ? isClosed : !isClosed;
+                  });
+
+                  if (filteredSchedules.length === 0) {
+                    return (
+                      <div className="p-8 border border-black/10 dark:border-white/10 text-center bg-black/5 dark:bg-white/5">
+                        <p className="text-[12px] font-bold text-gray-500 uppercase tracking-widest">
+                          Belum ada jadwal {showClosedSchedules ? 'yang ditutup' : 'aktif'}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="flex flex-col gap-3">
+                      {filteredSchedules.map((sched) => {
                       const attendedNames = initialAbsensi
                         .filter(r => r.schedule_id === sched.id)
                         .map(r => r.nama);
@@ -864,17 +872,36 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
                             <div>
                               <p className="text-[14px] font-black text-black dark:text-white uppercase tracking-widest mb-1">{sched.title}</p>
                               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase">
-                                <span>{formatDate(sched.start_time)}</span>
-                                <span className="hidden sm:block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
-                                <span className="text-emerald-500">{formatTime(sched.start_time).slice(0, 5)} - {formatTime(sched.end_time).slice(0, 5)}</span>
+                                {!isMounted ? (
+                                  <span className="opacity-0">Loading time...</span>
+                                ) : formatDate(sched.start_time) === formatDate(sched.end_time) ? (
+                                  <>
+                                    <span>{formatDate(sched.start_time)}</span>
+                                    <span className="hidden sm:block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
+                                    <span className="text-emerald-500">{formatTime(sched.start_time).slice(0, 5)} - {formatTime(sched.end_time).slice(0, 5)}</span>
+                                  </>
+                                ) : (
+                                  <div className="flex flex-col gap-1 mt-1">
+                                    <span className="flex items-center gap-2"><span className="w-2 h-2 bg-emerald-500 inline-block rounded-full"></span> <span className="text-black dark:text-white">{formatDate(sched.start_time)}</span> {formatTime(sched.start_time).slice(0, 5)}</span>
+                                    <span className="flex items-center gap-2"><span className="w-2 h-2 bg-red-500 inline-block rounded-full"></span> <span className="text-black dark:text-white">{formatDate(sched.end_time)}</span> {formatTime(sched.end_time).slice(0, 5)}</span>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            <button 
-                              onClick={() => handleDeleteSchedule(sched.id)}
-                              className="px-4 py-2 border border-red-500 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-colors w-full sm:w-auto"
-                            >
-                              Hapus
-                            </button>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                              <Link 
+                                href={`/admin/schedules/${sched.id}`}
+                                className="px-4 py-2 border border-black/20 dark:border-white/20 text-black dark:text-white text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors w-full sm:w-auto text-center"
+                              >
+                                Detail & Edit
+                              </Link>
+                              <button 
+                                onClick={() => handleDeleteSchedule(sched.id)}
+                                className="px-4 py-2 border border-red-500 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-colors w-full sm:w-auto"
+                              >
+                                Hapus
+                              </button>
+                            </div>
                           </div>
                           
                           {/* Missing Members List */}
@@ -896,9 +923,10 @@ export default function AdminClient({ initialAbsensi, initialMembers, initialMvp
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
-                )}
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { AbsensiRecord } from '@/lib/supabase';
@@ -12,15 +12,20 @@ interface RiwayatViewProps {
 }
 
 const formatDate = (d: string) =>
-  new Date(d).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+  new Date(d).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
 
 const formatTime = (d: string) =>
-  new Date(d).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+  new Date(d).toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/\./g, ':');
 
 const getInitial = (name: string) => name.charAt(0).toUpperCase();
 
 export default function RiwayatView({ initialRecords: records, nama, leaderboard }: RiwayatViewProps) {
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const sortedLeaderboard = useMemo(() => {
     if (!leaderboard) return [];
@@ -122,9 +127,15 @@ export default function RiwayatView({ initialRecords: records, nama, leaderboard
                         {record.nama}
                       </p>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-[10px] sm:text-[11px] font-bold text-gray-500 tracking-[0.2em] uppercase mt-1">
-                        <span>{formatDate(record.created_at)}</span>
-                        <span className="hidden sm:block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
-                        <span className="text-black dark:text-white">{formatTime(record.created_at)} LOCAL</span>
+                        {!isMounted ? (
+                          <span className="opacity-0">Loading time...</span>
+                        ) : (
+                          <>
+                            <span>{formatDate(record.created_at)}</span>
+                            <span className="hidden sm:block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
+                            <span className="text-black dark:text-white">{formatTime(record.created_at)} LOCAL</span>
+                          </>
+                        )}
                       </div>
                       {record.status === 'IZIN' && record.alasan && (
                         <div className="mt-2 text-[11px] font-bold text-blue-500 border-l-2 border-blue-500 pl-3">

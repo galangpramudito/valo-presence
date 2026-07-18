@@ -14,13 +14,15 @@ export default async function AbsenPage() {
     redirect('/login');
   }
   // Fetch active schedules
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Use WIB (UTC+7) midnight to filter today's schedules correctly,
+  // even when the server runs in UTC (e.g. Vercel)
+  const nowWIB = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+  const todayWIB = new Date(nowWIB.getFullYear(), nowWIB.getMonth(), nowWIB.getDate());
   
   const { data: allSchedules } = await supabase
     .from('schedules')
     .select('*')
-    .gte('end_time', today.toISOString())
+    .gte('end_time', todayWIB.toISOString())
     .order('start_time', { ascending: true });
     
   const activeScheduleIds = allSchedules?.map(s => s.id) || [];
