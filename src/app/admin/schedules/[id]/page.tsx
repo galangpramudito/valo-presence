@@ -21,29 +21,20 @@ export default async function ScheduleDetailPage({ params }: { params: Promise<{
 
   const { id } = await params;
 
-  // Fetch the schedule
-  const { data: scheduleData } = await supabase
-    .from('schedules')
-    .select('*')
-    .eq('id', id)
-    .single();
+  // Fetch schedule, attendance records, and squad members concurrently
+  const [
+    { data: scheduleData },
+    { data: absensiData },
+    { data: memberData }
+  ] = await Promise.all([
+    supabase.from('schedules').select('*').eq('id', id).single(),
+    supabase.from('absensi').select('*').eq('schedule_id', id).order('created_at', { ascending: false }),
+    supabase.from('squad_members').select('*').order('nama', { ascending: true })
+  ]);
 
   if (!scheduleData) {
     redirect('/admin');
   }
-
-  // Fetch attendance records for this schedule
-  const { data: absensiData } = await supabase
-    .from('absensi')
-    .select('*')
-    .eq('schedule_id', id)
-    .order('created_at', { ascending: false });
-
-  // Fetch all members to see who is missing
-  const { data: memberData } = await supabase
-    .from('squad_members')
-    .select('*')
-    .order('nama', { ascending: true });
 
   return (
     <ScheduleDetailClient 

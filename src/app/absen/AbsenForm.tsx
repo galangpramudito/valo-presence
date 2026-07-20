@@ -137,6 +137,9 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
         formData.append('nama', nama);
         formData.append('schedule_id', selectedScheduleId);
         formData.append('alasan', alasan);
+        if (file) {
+          formData.append('file', file);
+        }
 
         const result = await submitIzin(formData);
         if (result.error) throw new Error(result.error);
@@ -294,11 +297,44 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
                   value={alasan}
                   onChange={(e) => setAlasan(e.target.value)}
                   placeholder="Ketik alasan kamu secara detail di sini..."
-                  className="w-full h-32 px-4 py-3 border border-black/20 dark:border-white/20 bg-transparent text-sm text-black dark:text-white focus:outline-none focus:border-blue-500 resize-none"
+                  className="w-full h-32 px-4 py-3 border border-black/20 dark:border-white/20 bg-transparent text-sm text-black dark:text-white focus:outline-none focus:border-blue-500 resize-none mb-4"
                   required={isIzinMode}
                 />
+                
+                <label className="block text-[11px] font-black text-blue-500 mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                  Lampiran Bukti (Opsional)
+                </label>
+                <div className="flex items-center gap-4 border border-black/10 dark:border-white/10 p-3 bg-black/5 dark:bg-white/5">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }}
+                    className="px-4 py-2 border-2 border-blue-500/30 text-[10px] font-black uppercase tracking-widest text-blue-500 hover:bg-blue-500 hover:text-white transition-colors flex-shrink-0"
+                  >
+                    {file ? 'GANTI GAMBAR' : 'PILIH GAMBAR'}
+                  </button>
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 truncate">
+                      {file ? file.name : 'Tidak ada gambar dipilih'}
+                    </span>
+                    {file && (
+                      <button
+                        type="button"
+                        onClick={removeFile}
+                        className="text-red-500 hover:text-red-600 flex-shrink-0 ml-auto p-1"
+                        title="Hapus"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <p className="mt-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                  Harus lebih dari 10 karakter. Jelaskan dengan detail.
+                  Harus lebih dari 10 karakter. Lampirkan foto jika ada bukti (opsional).
                 </p>
               </div>
             ) : (
@@ -400,25 +436,25 @@ export default function AbsenForm({ nama, schedules = [], totalSchedulesToday = 
                 </div>
               )}
 
-              
-              {/* Hidden Inputs */}
-              <input 
-                ref={fileInputRef} 
-                type="file" 
-                accept="image/jpeg,image/png,image/webp" 
-                onChange={(e) => handleFileChange(e.target.files?.[0] || null)} 
-                className="hidden" 
-              />
-              <input 
-                id="cameraInput"
-                type="file" 
-                accept="image/*" 
-                capture="environment"
-                onChange={(e) => handleFileChange(e.target.files?.[0] || null)} 
-                className="hidden" 
-              />
             </div>
             )}
+            
+            {/* Hidden Inputs for both modes */}
+            <input 
+              ref={fileInputRef} 
+              type="file" 
+              accept="image/jpeg,image/png,image/webp" 
+              onChange={(e) => handleFileChange(e.target.files?.[0] || null)} 
+              className="hidden" 
+            />
+            <input 
+              id="cameraInput"
+              type="file" 
+              accept="image/*" 
+              capture="environment"
+              onChange={(e) => handleFileChange(e.target.files?.[0] || null)} 
+              className="hidden" 
+            />
 
             {/* Submit Action */}
             <div className="p-4 mt-2">

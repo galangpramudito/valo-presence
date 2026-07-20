@@ -57,13 +57,14 @@ export async function uploadAbsensi(formData: FormData) {
     const { nama, file, schedule_id: scheduleId } = validation.data;
 
 
-    // Check for duplicate attendance
-    const { data: existingAbsensi } = await supabase
-      .from('absensi')
-      .select('id')
-      .eq('nama', nama)
-      .eq('schedule_id', scheduleId)
-      .maybeSingle();
+    // Fetch duplicate check and schedule check concurrently
+    const [
+      { data: existingAbsensi },
+      { data: schedule }
+    ] = await Promise.all([
+      supabase.from('absensi').select('id').eq('nama', nama).eq('schedule_id', scheduleId).maybeSingle(),
+      supabase.from('schedules').select('start_time, end_time').eq('id', scheduleId).single()
+    ]);
 
     if (existingAbsensi) {
       return { error: 'Kamu sudah mengisi absensi untuk jadwal ini!' };
@@ -71,7 +72,6 @@ export async function uploadAbsensi(formData: FormData) {
 
     // Determine status
     let status = 'PRESENT';
-    const { data: schedule } = await supabase.from('schedules').select('start_time, end_time').eq('id', scheduleId).single();
     
     if (schedule) {
       const now = new Date();
@@ -177,22 +177,54 @@ export async function submitIzin(formData: FormData) {
 
     const { nama, schedule_id: scheduleId, alasan } = validation.data;
 
-    // Validate schedule exists
-    const { data: schedule } = await supabase.from('schedules').select('id').eq('id', scheduleId).maybeSingle();
+    // Validate schedule and check duplicate concurrently
+    const [
+      { data: schedule },
+      { data: existingAbsensi }
+    ] = await Promise.all([
+      supabase.from('schedules').select('id').eq('id', scheduleId).maybeSingle(),
+      supabase.from('absensi').select('id').eq('nama', nama).eq('schedule_id', scheduleId).maybeSingle()
+    ]);
+
     if (!schedule) {
       return { error: 'Jadwal tidak valid atau tidak ditemukan' };
     }
 
-    // Check for duplicate attendance
-    const { data: existingAbsensi } = await supabase
-      .from('absensi')
-      .select('id')
-      .eq('nama', nama)
-      .eq('schedule_id', scheduleId)
-      .maybeSingle();
-
     if (existingAbsensi) {
       return { error: 'Kamu sudah mengisi absensi/izin untuk jadwal ini!' };
+    }
+
+    const file = formData.get('file') as File | null;
+    let publicUrl = '';
+
+    if (file && file.size > 0) {
+      const fileValidation = validateFile(file);
+      if (!fileValidation.valid) {
+        return { error: fileValidation.error };
+      }
+
+      const fileName = generateUniqueFilename(file.name, `${nama.replace(/\\s+/g, '-')}-izin-`);
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(fileName, buffer, {
+          contentType: file.type,
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        return { error: `Gagal upload file lampiran: ${uploadError.message}` };
+      }
+
+      const { data: urlData } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(fileName);
+
+      publicUrl = urlData.publicUrl;
     }
 
     const insertPayload = { 
@@ -200,7 +232,7 @@ export async function submitIzin(formData: FormData) {
       schedule_id: scheduleId, 
       status: 'IZIN', 
       alasan: alasan.trim(),
-      image_url: '' 
+      image_url: publicUrl 
     };
 
     const { error: insertError } = await supabase
@@ -209,6 +241,15 @@ export async function submitIzin(formData: FormData) {
 
     if (insertError) {
       console.error('Database error:', insertError);
+      
+      // Cleanup uploaded file if db insert fails
+      if (publicUrl) {
+        const fileNameToDel = publicUrl.split('/').pop();
+        if (fileNameToDel) {
+          await supabase.storage.from(STORAGE_BUCKET).remove([fileNameToDel]);
+        }
+      }
+      
       return { error: `Gagal menyimpan data: ${insertError.message}` };
     }
 

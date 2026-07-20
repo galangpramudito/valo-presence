@@ -54,6 +54,7 @@ export const submitIzinSchema = z.object({
   nama: z.string().min(1, 'Nama wajib diisi'),
   schedule_id: z.string().uuid('ID Jadwal tidak valid'),
   alasan: z.string().min(10, 'Alasan terlalu singkat. Jelaskan dengan detail!'),
+  file: z.any().optional(),
 });
 
 export type SubmitIzinInput = z.infer<typeof submitIzinSchema>;

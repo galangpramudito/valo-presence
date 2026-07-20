@@ -19,29 +19,18 @@ export default async function AdminPage() {
     redirect('/');
   }
 
-  // Fetch all attendance records
-  const { data: absensiData } = await supabase
-    .from('absensi')
-    .select('*, schedules(title)')
-    .order('created_at', { ascending: false });
-
-  // Fetch all squad members
-  const { data: memberData } = await supabase
-    .from('squad_members')
-    .select('*')
-    .order('nama', { ascending: true });
-
-  // Fetch MVPs
-  const { data: mvpData } = await supabase
-    .from('mvps')
-    .select('*')
-    .order('rank', { ascending: true });
-
-  // Fetch Schedules
-  const { data: scheduleData } = await supabase
-    .from('schedules')
-    .select('*')
-    .order('start_time', { ascending: false });
+  // Fetch all data concurrently
+  const [
+    { data: absensiData },
+    { data: memberData },
+    { data: mvpData },
+    { data: scheduleData }
+  ] = await Promise.all([
+    supabase.from('absensi').select('*, schedules(title)').order('created_at', { ascending: false }),
+    supabase.from('squad_members').select('*').order('nama', { ascending: true }),
+    supabase.from('mvps').select('*').order('rank', { ascending: true }),
+    supabase.from('schedules').select('*').order('start_time', { ascending: false })
+  ]);
 
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-[10px] font-black uppercase tracking-widest text-black dark:text-white">Loading Command Center...</div>}>
